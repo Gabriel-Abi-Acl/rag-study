@@ -7,7 +7,13 @@ import pytest
 from rag_study.config import ENV_KEYS, load_settings
 from rag_study.embeddings import GeminiEmbedder, HashingEmbedder, OpenAIEmbedder
 from rag_study.errors import ConfigError
-from rag_study.factory import build_embedder, build_llm, build_pipelines
+from rag_study.factory import (
+    build_embedder,
+    build_judge,
+    build_llm,
+    build_pipelines,
+    judge_model_name,
+)
 from rag_study.llm import FakeLLM, GeminiLLM, OpenAILLM
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,6 +31,12 @@ def test_defaults_point_at_gemini_and_recursive_chunks():
     assert settings.rerank_candidates == 8
     assert settings.corpus_path == Path("data/sample")
     assert settings.gemini_api_key == ""
+    assert settings.judge_provider == "gemini"
+    assert settings.judge_model == ""
+    assert settings.eval_cache_dir == Path("results/cache")
+    assert settings.price_table == Path("data/eval/prices.v1.json")
+    assert settings.request_interval_s == 6
+    assert settings.llm_max_retries == 6
 
 
 def test_env_overrides_are_parsed():
@@ -58,6 +70,12 @@ def test_invalid_values_raise_before_any_provider_call():
         load_settings({"CHUNK_SIZE": "20", "CHUNK_OVERLAP": "20"})
     with pytest.raises(ConfigError):
         load_settings({"TOP_K": "4", "RERANK_CANDIDATES": "2"})
+    with pytest.raises(ConfigError):
+        load_settings({"JUDGE_PROVIDER": "anthropic"})
+    with pytest.raises(ConfigError):
+        load_settings({"REQUEST_INTERVAL_S": "-1"})
+    with pytest.raises(ConfigError):
+        load_settings({"LLM_MAX_RETRIES": "0"})
 
 
 def test_explicit_env_ignores_dotenv_file(tmp_path: Path):
@@ -122,6 +140,23 @@ def test_factories_build_fakes_and_refuse_missing_keys():
     )
     assert isinstance(build_llm(keyed), GeminiLLM)
     assert isinstance(build_embedder(keyed), GeminiEmbedder)
+
+
+def test_judge_factory_is_optional_and_refuses_a_missing_key():
+    assert build_judge(load_settings({"JUDGE_PROVIDER": "off"})) is None
+    assert isinstance(build_judge(load_settings({"JUDGE_PROVIDER": "fake"})), FakeLLM)
+    assert judge_model_name(load_settings({"JUDGE_PROVIDER": "gemini"})) == "gemini-2.5-flash"
+    named = load_settings(
+        {
+            "JUDGE_PROVIDER": "openai",
+            "JUDGE_MODEL": "gpt-test",
+            "OPENAI_API_KEY": "sk-test",
+        }
+    )
+    assert judge_model_name(named) == "gpt-test"
+    assert isinstance(build_judge(named), OpenAILLM)
+    with pytest.raises(ConfigError):
+        build_judge(load_settings({"JUDGE_PROVIDER": "gemini", "GEMINI_API_KEY": ""}))
 
 
 def test_sample_corpus_indexes_offline(tmp_path: Path):

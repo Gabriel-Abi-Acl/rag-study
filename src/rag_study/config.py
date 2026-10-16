@@ -15,6 +15,7 @@ from rag_study.errors import ConfigError
 
 LLM_PROVIDERS = ("gemini", "openai", "fake")
 EMBEDDING_PROVIDERS = ("gemini", "openai", "fake")
+JUDGE_PROVIDERS = ("gemini", "openai", "fake", "off")
 CHUNK_STRATEGIES = ("fixed", "recursive")
 
 ENV_KEYS = (
@@ -32,6 +33,12 @@ ENV_KEYS = (
     "TOP_K",
     "RERANK_CANDIDATES",
     "CORPUS_PATH",
+    "JUDGE_PROVIDER",
+    "JUDGE_MODEL",
+    "EVAL_CACHE_DIR",
+    "PRICE_TABLE",
+    "REQUEST_INTERVAL_S",
+    "LLM_MAX_RETRIES",
 )
 
 
@@ -51,6 +58,12 @@ class Settings:
     top_k: int
     rerank_candidates: int
     corpus_path: Path
+    judge_provider: str
+    judge_model: str
+    eval_cache_dir: Path
+    price_table: Path
+    request_interval_s: float
+    llm_max_retries: int
 
 
 def load_settings(
@@ -83,6 +96,12 @@ def load_settings(
         top_k=top_k,
         rerank_candidates=rerank_candidates,
         corpus_path=Path(_text(source, "CORPUS_PATH", "data/sample")),
+        judge_provider=_choice(source, "JUDGE_PROVIDER", "gemini", JUDGE_PROVIDERS),
+        judge_model=_text(source, "JUDGE_MODEL", ""),
+        eval_cache_dir=Path(_text(source, "EVAL_CACHE_DIR", "results/cache")),
+        price_table=Path(_text(source, "PRICE_TABLE", "data/eval/prices.v1.json")),
+        request_interval_s=_number(source, "REQUEST_INTERVAL_S", default=6.0, minimum=0),
+        llm_max_retries=_integer(source, "LLM_MAX_RETRIES", default=6, minimum=1),
     )
 
 
@@ -119,6 +138,26 @@ def _choice(
     if value not in allowed:
         options = ", ".join(allowed)
         raise ConfigError(f"{key} inválida: {value}. Use: {options}.")
+    return value
+
+
+def _number(
+    source: Mapping[str, str],
+    key: str,
+    *,
+    default: float,
+    minimum: float,
+) -> float:
+    raw = source.get(key)
+    if raw is None or str(raw).strip() == "":
+        value = default
+    else:
+        try:
+            value = float(str(raw).strip())
+        except ValueError as exc:
+            raise ConfigError(f"{key} precisa ser um número.") from exc
+    if value < minimum:
+        raise ConfigError(f"{key} precisa ser >= {minimum}.")
     return value
 
 

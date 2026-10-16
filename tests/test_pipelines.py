@@ -43,6 +43,7 @@ def test_no_context_hides_corpus_from_the_prompt():
     answer = NoContextPipeline(llm).answer("Qual a população?")
     assert answer.pipeline == "no_context"
     assert answer.contexts == ()
+    assert answer.chunk_ids == ()
     assert answer.text == "sem-contexto"
     assert "Qual a população?" in llm.prompts[0]
     assert "12.450" not in llm.prompts[0]
@@ -55,6 +56,7 @@ def test_naive_rag_puts_retrieved_chunks_in_score_order():
     assert retriever.calls == [("pergunta", 2)]
     assert answer.pipeline == "naive_rag"
     assert answer.contexts == ("fato-a", "fato-b")
+    assert answer.chunk_ids == ("doc:0", "doc:1")
     prompt = llm.prompts[0]
     assert prompt.index("fato-a") < prompt.index("fato-b")
     assert "Responda usando somente o contexto." in prompt
@@ -75,6 +77,7 @@ def test_rag_rerank_uses_reranker_order_and_wider_candidate_pool():
     assert retriever.calls == [("pergunta", 3)]
     assert answer.pipeline == "rag_rerank"
     assert answer.contexts == ("terceiro", "segundo")
+    assert answer.chunk_ids == ("doc:2", "doc:1")
     prompt = llm.prompts[0]
     assert prompt.index("terceiro") < prompt.index("segundo")
     assert "primeiro" not in prompt
@@ -98,10 +101,12 @@ def test_identity_reranker_preserves_order_and_pipeline_still_caps_top_k():
         candidate_k=3,
     ).answer("pergunta")
     assert answer.contexts == ("a",)
+    assert answer.chunk_ids == ("doc:0",)
 
 
 def test_empty_retrieval_still_calls_the_llm():
     llm = FakeLLM()
     answer = NaiveRagPipeline(llm, RecordingRetriever([]), top_k=3).answer("pergunta")
     assert answer.contexts == ()
+    assert answer.chunk_ids == ()
     assert "(nenhum trecho recuperado)" in llm.prompts[0]

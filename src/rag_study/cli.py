@@ -1,15 +1,14 @@
 """Demo local das três pipelines. Não imprime métrica nem comparação de qualidade.
 
-Serve para checar se a chave, o corpus e o índice sobem. Avaliação fica
-para os PRs de dataset e de métricas.
+Serve para checar se a chave, o corpus e o índice sobem. A avaliação
+versionada fica em `python -m rag_study.run`.
 """
 
 import argparse
 
 from rag_study.config import load_settings
 from rag_study.factory import build_pipelines
-
-PIPELINE_ORDER = ("no_context", "naive_rag", "rag_rerank")
+from rag_study.pipelines import PIPELINE_ORDER
 
 
 def main(argv: list[str] | None = None) -> int:
