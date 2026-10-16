@@ -8,6 +8,7 @@ agrega uma lista num único vetor.
 import hashlib
 import math
 import re
+import time
 
 from rag_study.errors import ConfigError, ProviderError
 
@@ -25,12 +26,25 @@ class HashingEmbedder:
 
 
 class GeminiEmbedder:
-    def __init__(self, api_key: str, model: str) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        *,
+        max_retries: int = 6,
+        base_delay: float = 10.0,
+        max_delay: float = 65.0,
+        sleep=time.sleep,
+    ) -> None:
         if not api_key.strip():
             raise ConfigError("GEMINI_API_KEY é obrigatória quando o provedor é gemini.")
         self._api_key = api_key
         self._model = model
         self._client = None
+        self._max_retries = max_retries
+        self._base_delay = base_delay
+        self._max_delay = max_delay
+        self._sleep = sleep
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         if not texts:
@@ -38,12 +52,26 @@ class GeminiEmbedder:
         client = self._client_or_create()
         vectors: list[list[float]] = []
         for text in texts:
-            response = client.models.embed_content(model=self._model, contents=text)
+            response = self._embed_one(client, text)
             embeddings = getattr(response, "embeddings", None) or []
             if not embeddings or embeddings[0].values is None:
                 raise ProviderError("Gemini devolveu embedding vazio.")
             vectors.append([float(value) for value in embeddings[0].values])
         return vectors
+
+    def _embed_one(self, client, text: str):
+        # O tier gratuito limita embed_content por minuto. Em 429 espera e tenta de novo.
+        attempt = 0
+        while True:
+            try:
+                return client.models.embed_content(model=self._model, contents=text)
+            except Exception as exc:
+                message = str(exc)
+                transient = "429" in message or "RESOURCE_EXHAUSTED" in message
+                if not transient or attempt >= self._max_retries:
+                    raise
+                self._sleep(min(self._max_delay, self._base_delay * (2**attempt)))
+                attempt += 1
 
     def _client_or_create(self):
         if self._client is None:

@@ -173,3 +173,48 @@ def test_empty_provider_text_raises():
     finally:
         for name in monkeypatch_modules:
             sys.modules.pop(name, None)
+
+
+def test_gemini_embedder_retries_on_rate_limit():
+    class Values:
+        values = [1.0, 0.0]
+
+    class Response:
+        embeddings = [Values()]
+
+    class Models:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def embed_content(self, model, contents):
+            self.calls += 1
+            if self.calls == 1:
+                raise RuntimeError("429 RESOURCE_EXHAUSTED")
+            return Response()
+
+    class Client:
+        models = Models()
+
+    sleeps: list[float] = []
+    embedder = GeminiEmbedder(api_key="k", model="m", sleep=sleeps.append, base_delay=1.0)
+    embedder._client = Client()
+    assert embedder.embed(["a"]) == [[1.0, 0.0]]
+    assert sleeps == [1.0]
+
+
+def test_gemini_embedder_does_not_retry_other_errors():
+    class Models:
+        def embed_content(self, model, contents):
+            raise RuntimeError("400 INVALID_ARGUMENT")
+
+    class Client:
+        models = Models()
+
+    embedder = GeminiEmbedder(api_key="k", model="m", sleep=lambda _: None)
+    embedder._client = Client()
+    try:
+        embedder.embed(["a"])
+    except RuntimeError as exc:
+        assert "400" in str(exc)
+    else:
+        raise AssertionError("esperava erro")
