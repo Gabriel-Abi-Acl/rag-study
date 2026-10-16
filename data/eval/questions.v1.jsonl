@@ -1,0 +1,50 @@
+{"id": "q001", "question": "Qual é o nome do rio que corta Vila Aurora?", "reference_answer": "Ribeirão das Laranjeiras", "source_doc_ids": ["geografia.txt"], "type": "factual"}
+{"id": "q002", "question": "Com qual município Vila Aurora faz limite?", "reference_answer": "Serra do Vento", "source_doc_ids": ["geografia.txt"], "type": "factual"}
+{"id": "q003", "question": "Qual é o nome do ponto mais alto de Vila Aurora?", "reference_answer": "Morro do Jacarandá", "source_doc_ids": ["geografia.txt"], "type": "factual"}
+{"id": "q004", "question": "Quem é a prefeita eleita em 2024 em Vila Aurora?", "reference_answer": "Helena Duarte", "source_doc_ids": ["governo.txt"], "type": "factual"}
+{"id": "q005", "question": "Quem é o vice-prefeito eleito em 2024 em Vila Aurora?", "reference_answer": "Paulo Neri", "source_doc_ids": ["governo.txt"], "type": "factual"}
+{"id": "q006", "question": "Qual é o intervalo do mandato da prefeitura iniciado em 2025?", "reference_answer": "2025 a 2028", "source_doc_ids": ["governo.txt"], "type": "factual"}
+{"id": "q007", "question": "Como se chama a biblioteca municipal de Vila Aurora?", "reference_answer": "Biblioteca Machado de Assis", "source_doc_ids": ["biblioteca.md"], "type": "factual"}
+{"id": "q008", "question": "Qual é o endereço da biblioteca municipal?", "reference_answer": "Rua do Cedro, 45", "source_doc_ids": ["biblioteca.md"], "type": "factual"}
+{"id": "q009", "question": "Quem é a diretora do hospital municipal?", "reference_answer": "Márcia Lemos", "source_doc_ids": ["saude.txt"], "type": "factual"}
+{"id": "q010", "question": "Em que dias ocorre a coleta de lixo orgânico?", "reference_answer": "segundas e sextas", "source_doc_ids": ["residuos.md"], "type": "factual"}
+{"id": "q011", "question": "Qual é a regra cadastral da coleta de lixo reciclável?", "reference_answer": "A coleta de lixo reciclável ocorre às quartas-feiras.", "source_doc_ids": ["residuos.md"], "type": "factual"}
+{"id": "q012", "question": "Como se chama a escola mais antiga da rede municipal?", "reference_answer": "Escola Municipal Inácio Pires", "source_doc_ids": ["educacao.txt"], "type": "factual"}
+{"id": "q013", "question": "Quem é tido como fundador de Vila Aurora?", "reference_answer": "Inácio Pires", "source_doc_ids": ["historia.txt"], "type": "factual"}
+{"id": "q014", "question": "Como se chama o mirante oficial?", "reference_answer": "Mirante do Jacarandá", "source_doc_ids": ["turismo.md"], "type": "factual"}
+{"id": "q015", "question": "Como se chama o ginásio municipal?", "reference_answer": "Ginásio das Laranjeiras", "source_doc_ids": ["esporte.txt"], "type": "factual"}
+{"id": "q016", "question": "Como se chama o teatro municipal?", "reference_answer": "Teatro Aurora", "source_doc_ids": ["cultura.txt"], "type": "factual"}
+{"id": "q017", "question": "Como se chama a escola do distrito da Lagoa?", "reference_answer": "Escola Rural da Lagoa", "source_doc_ids": ["distrito_lagoa.md"], "type": "factual"}
+{"id": "q018", "question": "Qual é o endereço do posto da Guarda Municipal?", "reference_answer": "Rua do Cedro, 12", "source_doc_ids": ["seguranca.txt"], "type": "factual"}
+{"id": "q019", "question": "Em que ano a Biblioteca Machado de Assis foi fundada?", "reference_answer": "1978", "source_doc_ids": ["biblioteca.md"], "type": "numeric"}
+{"id": "q020", "question": "Por volta de que ano o blog não oficial diz que a biblioteca teria sido fundada?", "reference_answer": "1981", "source_doc_ids": ["blog_biblioteca.md"], "type": "numeric"}
+{"id": "q021", "question": "Qual é a população estimada de Vila Aurora em 2024?", "reference_answer": "12.450", "source_doc_ids": ["populacao.md"], "type": "numeric"}
+{"id": "q022", "question": "Qual era a população estimada de Vila Aurora em 2020?", "reference_answer": "11.980", "source_doc_ids": ["populacao.md"], "type": "numeric"}
+{"id": "q023", "question": "Qual é a altitude da sede de Vila Aurora?", "reference_answer": "860 metros", "source_doc_ids": ["geografia.txt"], "type": "numeric"}
+{"id": "q024", "question": "Qual é a tarifa residencial de água por metro cúbico?", "reference_answer": "R$ 3,20", "source_doc_ids": ["agua.md"], "type": "numeric"}
+{"id": "q025", "question": "Qual é a extensão da Trilha do Jacarandá?", "reference_answer": "4,6 km", "source_doc_ids": ["meio_ambiente.md"], "type": "numeric"}
+{"id": "q026", "question": "Quantos leitos tem o Hospital Municipal de Vila Aurora?", "reference_answer": "42 leitos", "source_doc_ids": ["saude.txt"], "type": "numeric"}
+{"id": "q027", "question": "Qual é a tarifa do ônibus circular?", "reference_answer": "R$ 4,50", "source_doc_ids": ["transporte.md"], "type": "numeric"}
+{"id": "q028", "question": "Quantos itens tem o acervo da Biblioteca Machado de Assis?", "reference_answer": "18.600", "source_doc_ids": ["biblioteca.md"], "type": "numeric"}
+{"id": "q029", "question": "Quantos alunos a rede municipal tinha em 2024?", "reference_answer": "1.860", "source_doc_ids": ["educacao.txt"], "type": "numeric"}
+{"id": "q030", "question": "Qual foi a marca d'água medida na praça na enchente de 2019?", "reference_answer": "2,3 metros", "source_doc_ids": ["enchente_2019.txt"], "type": "numeric"}
+{"id": "q031", "question": "Quantos habitantes o distrito da Lagoa registrou em 2024?", "reference_answer": "2.140", "source_doc_ids": ["distrito_lagoa.md"], "type": "numeric"}
+{"id": "q032", "question": "Qual foi o orçamento municipal de 2024?", "reference_answer": "R$ 42.300.000", "source_doc_ids": ["orcamento.md"], "type": "numeric"}
+{"id": "q033", "question": "Quem preside o conselho da biblioteca municipal?", "reference_answer": "Helena Duarte", "source_doc_ids": ["conselho_biblioteca.md", "governo.txt"], "type": "multi_hop"}
+{"id": "q034", "question": "Qual é o nome do rio que transbordou até a Praça do Coreto em março de 2019?", "reference_answer": "Ribeirão das Laranjeiras", "source_doc_ids": ["enchente_2019.txt", "geografia.txt"], "type": "multi_hop"}
+{"id": "q035", "question": "Em que ano a biblioteca municipal foi fundada e quem preside o conselho dela?", "reference_answer": "A biblioteca foi fundada em 1978 e o conselho é presidido por Helena Duarte.", "source_doc_ids": ["biblioteca.md", "conselho_biblioteca.md", "governo.txt"], "type": "multi_hop"}
+{"id": "q036", "question": "Quantos habitantes tinha em 2024 o único distrito de Vila Aurora?", "reference_answer": "2.140", "source_doc_ids": ["populacao.md", "distrito_lagoa.md"], "type": "multi_hop"}
+{"id": "q037", "question": "Qual é a tarifa cheia do ônibus circular em que os estudantes da rede municipal pagam meia-entrada?", "reference_answer": "R$ 4,50", "source_doc_ids": ["educacao.txt", "transporte.md"], "type": "multi_hop"}
+{"id": "q038", "question": "Em que ano chegou a Vila Aurora a pessoa que dá nome à escola mais antiga da rede municipal?", "reference_answer": "1923", "source_doc_ids": ["educacao.txt", "historia.txt"], "type": "multi_hop"}
+{"id": "q039", "question": "A enchente de 2019 atingiu o local da feira livre?", "reference_answer": "Sim, a água chegou à Praça do Coreto.", "source_doc_ids": ["enchente_2019.txt", "feira.txt"], "type": "multi_hop"}
+{"id": "q040", "question": "Quem era a diretora do hospital no ano em que a secretaria de saúde recebeu R$ 9.800.000?", "reference_answer": "Márcia Lemos", "source_doc_ids": ["orcamento.md", "saude.txt"], "type": "multi_hop"}
+{"id": "q041", "question": "Qual distrito a linha rural do ônibus que parte a cada 20 minutos atende, e quantos habitantes esse distrito registrou em 2024?", "reference_answer": "A linha rural atende o distrito da Lagoa, que registrou 2.140 habitantes.", "source_doc_ids": ["transporte.md", "distrito_lagoa.md"], "type": "multi_hop"}
+{"id": "q042", "question": "A proposta de elevar a tarifa do ônibus circular para R$ 5,00 foi aprovada? Qual é a tarifa vigente?", "reference_answer": "A proposta foi rejeitada e a tarifa vigente é de R$ 4,50.", "source_doc_ids": ["ata_camara.txt", "transporte.md"], "type": "multi_hop"}
+{"id": "q043", "question": "Quanto a biblioteca recebeu no orçamento de 2024 e em que ano a Biblioteca Machado de Assis foi fundada?", "reference_answer": "A biblioteca recebeu R$ 640.000 e foi fundada em 1978.", "source_doc_ids": ["orcamento.md", "biblioteca.md"], "type": "multi_hop"}
+{"id": "q044", "question": "Qual é a população estimada oficial de Vila Aurora em 2024 e qual número de habitantes o boato não oficial afirma?", "reference_answer": "A estimativa oficial é de 12.450 habitantes e o boato afirma 20.000.", "source_doc_ids": ["populacao.md", "rumor_populacao.md"], "type": "multi_hop"}
+{"id": "q045", "question": "Qual é o PIB de Vila Aurora?", "reference_answer": "Não consta no corpus.", "source_doc_ids": [], "type": "unanswerable"}
+{"id": "q046", "question": "Quantos leitos de UTI neonatal o hospital municipal de Vila Aurora possui?", "reference_answer": "Não consta no corpus.", "source_doc_ids": [], "type": "unanswerable"}
+{"id": "q047", "question": "Qual é o CEP da prefeitura de Vila Aurora?", "reference_answer": "Não consta no corpus.", "source_doc_ids": [], "type": "unanswerable"}
+{"id": "q048", "question": "Quem venceu o campeonato municipal de xadrez de Vila Aurora em 2023?", "reference_answer": "Não consta no corpus.", "source_doc_ids": [], "type": "unanswerable"}
+{"id": "q049", "question": "Qual é a altura da caixa d'água do distrito da Lagoa?", "reference_answer": "Não consta no corpus.", "source_doc_ids": [], "type": "unanswerable"}
+{"id": "q050", "question": "Quantos quilômetros de ciclovia existem em Vila Aurora?", "reference_answer": "Não consta no corpus.", "source_doc_ids": [], "type": "unanswerable"}
