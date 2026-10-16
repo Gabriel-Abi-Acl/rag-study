@@ -30,9 +30,13 @@ class ScoredChunk:
 
 @dataclass(frozen=True)
 class Answer:
-    """Resposta de uma pipeline. contexts e sources seguem a ordem enviada ao LLM."""
+    """Resposta de uma pipeline. contexts, sources e chunk_ids seguem a ordem enviada ao LLM.
+
+    chunk_ids entra no recall do harness. A ordem é a mesma dos trechos do prompt.
+    """
 
     text: str
     pipeline: str
     contexts: tuple[str, ...]
     sources: tuple[str, ...]
+    chunk_ids: tuple[str, ...] = ()

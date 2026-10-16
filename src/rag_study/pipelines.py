@@ -11,6 +11,8 @@ from rag_study.protocols import LLM, Reranker
 from rag_study.retriever import Retriever
 from rag_study.types import Answer, ScoredChunk
 
+PIPELINE_ORDER = ("no_context", "naive_rag", "rag_rerank")
+
 
 class NoContextPipeline:
     name = "no_context"
@@ -25,6 +27,7 @@ class NoContextPipeline:
             pipeline=self.name,
             contexts=(),
             sources=(),
+            chunk_ids=(),
         )
 
 
@@ -87,4 +90,5 @@ def _complete_with_context(
         pipeline=pipeline,
         contexts=tuple(hit.chunk.text for hit in hits),
         sources=tuple(hit.chunk.source for hit in hits),
+        chunk_ids=tuple(hit.chunk.chunk_id for hit in hits),
     )

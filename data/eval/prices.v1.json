@@ -1,0 +1,13 @@
+{
+  "note": "Preço de lista do tier pago Standard, texto, em USD por 1 milhão de tokens. Não é áudio, batch nem o tier gratuito. Gemini 2.5 Flash e Flash-Lite: https://ai.google.dev/gemini-api/docs/pricing (consultado em outubro de 2026). O tier gratuito cobra zero; este valor só compara volume. Modelo ausente deixa cost_usd nulo.",
+  "models": {
+    "gemini-2.5-flash": {
+      "input_per_million_usd": 0.3,
+      "output_per_million_usd": 2.5
+    },
+    "gemini-2.5-flash-lite": {
+      "input_per_million_usd": 0.1,
+      "output_per_million_usd": 0.4
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # rag-study
 
-Estudo técnico que compara três formas de um LLM responder perguntas sobre um corpus fechado: sem contexto, com RAG ingênuo e com RAG mais rerank. O corpus e o gabarito estão versionados. Este repositório ainda não tem números de qualidade, custo ou latência. Os PRs seguintes medem correção, fidelidade ao contexto, taxa de alucinação, custo e latência.
+Estudo técnico que compara três formas de um LLM responder perguntas sobre um corpus fechado: sem contexto, com RAG ingênuo e com RAG mais rerank. O corpus, o gabarito e o harness de métricas estão versionados. Este repositório ainda não tem números de uma execução real. O PR4 é quem publica correção, fidelidade, alucinação, custo e latência.
 
 O corpus é sintético (município fictício de Vila Aurora). Não há chave de API no git.
 
@@ -18,21 +18,17 @@ Provedor padrão de geração e de embedding: Gemini, pelo tier gratuito. OpenAI
 
 ## Hipótese
 
-Hipótese a testar, ainda sem evidência neste repositório: num corpus fechado, o RAG ingênuo reduz alucinação factual em relação à resposta sem contexto, e um reranker melhora a precisão dos trechos usados em relação ao RAG ingênuo. Custo e latência devem subir com a recuperação e, de novo, com o rerank. Confirmar ou refutar isso é o trabalho dos PRs 3 e 4. O dataset é o instrumento da medida; não é a medida.
+Hipótese a testar, ainda sem evidência neste repositório: num corpus fechado, o RAG ingênuo reduz alucinação factual em relação à resposta sem contexto, e um reranker melhora a precisão dos trechos usados em relação ao RAG ingênuo. Custo e latência devem subir com a recuperação e, de novo, com o rerank. Confirmar ou refutar isso é o trabalho do PR4. O dataset e o harness são o instrumento da medida; não são a medida.
 
 O `IdentityReranker` não reordena. Ele não serve como evidência a favor ou contra a hipótese.
 
 ## Metodologia (planejada)
 
 1. Corpus sintético versionado em `data/sample/`. Vila Aurora não é um município real; o texto foi escrito para este estudo.
-2. 50 perguntas com gabarito em `data/eval/questions.v1.jsonl`. Sem gabarito não há correção nem alucinação comparável. Este PR não gera resposta de modelo.
+2. 50 perguntas com gabarito em `data/eval/questions.v1.jsonl`. Sem gabarito não há correção nem alucinação comparável.
 3. As três pipelines acima, com o mesmo modelo, a mesma temperatura (0) e o mesmo corpus.
-4. Métricas (PR3), por RAGAS ou implementação equivalente e auditável:
-   - answer correctness
-   - faithfulness / groundedness
-   - taxa de alucinação
-   - custo (tokens ou preço de tabela) e latência
-5. Repetições, tabela e gráficos só depois que o harness existir (PR4). Nenhum gráfico entra no README antes disso.
+4. Métricas do harness, definidas na seção Avaliação. Não há biblioteca RAGAS: o match e a abstenção são código, e o juiz opcional devolve JSON.
+5. Repetições, tabela preenchida e gráficos só no PR4. Nenhum gráfico entra no README antes disso.
 
 Decisões já fixadas no código, de propósito limitadas:
 
@@ -61,7 +57,7 @@ Regras de tipo:
 
 - `factual` e `numeric` citam um único documento. O gabarito é um trecho literal desse documento. A checagem normaliza caixa e espaços e exige a substring. Número entra com a grafia da ficha (`12.450`, `R$ 4,50`, `860 metros`), sem converter milhar nem trocar vírgula por ponto.
 - `multi_hop` cita dois ou mais documentos. O gabarito não cabe inteiro em cada um deles. Em parte dos itens a resposta é um nome que está num arquivo e o elo está no outro (o conselho diz "prefeita eleita em 2024"; o governo nomeia Helena Duarte). Em outros, a frase do gabarito junta fatos que não aparecem juntos (tarifa rejeitada na ata e tarifa vigente no transporte).
-- `unanswerable` não cita documento. O gabarito é sempre `Não consta no corpus.` A pergunta parece local (PIB, UTI neonatal, CEP, xadrez, caixa d'água, ciclovia), mas o fato não foi escrito. A frase marca ausência de suporte. Este PR não define como uma métrica futura vai comparar a saída do modelo com ela.
+- `unanswerable` não cita documento. O gabarito é sempre `Não consta no corpus.` A pergunta parece local (PIB, UTI neonatal, CEP, xadrez, caixa d'água, ciclovia), mas o fato não foi escrito. A frase marca ausência de suporte. O harness compara a saída do modelo com essa abstenção; a regra está na seção Avaliação.
 
 Distratores, para a recuperação não ter só a frase certa:
 
@@ -79,6 +75,50 @@ uv run python -m rag_study.dataset
 ```
 
 Ele confere o nome versionado do arquivo, o schema de cada linha, ids únicos, `source_doc_ids` existentes no corpus, apoio literal das respostas factuais e numéricas, a regra de multi-hop, o gabarito fixo das perguntas sem resposta no corpus e a faixa de tamanho (cerca de 50 perguntas, 15 a 30 documentos, os quatro tipos presentes). Sai com código 1 se algo falhar. Os mesmos invariantes estão em `tests/test_eval_dataset.py`.
+
+## Avaliação
+
+O harness responde cada pergunta de uma pipeline e grava uma linha JSONL. Ele não escreve tabela no README. Números de qualidade, custo e latência de uma execução real só entram no PR4.
+
+RAGAS não é dependência. A biblioteca puxa LangChain, não usa o `LLM` fake da CI e não controla o ritmo do tier gratuito do Gemini. O equivalente auditável está no código: match normalizado, detector de abstenção e dois prompts de juiz que pedem JSON (`Julgamento de correção` e `Julgamento de fidelidade`).
+
+| métrica | definição neste harness |
+| --- | --- |
+| acerto | Nos tipos `factual`, `numeric` e `multi_hop`, o gabarito normalizado (a mesma função do dataset: caixa e espaços, sem reescrever `12.450`) precisa ocorrer na resposta. Com juiz ligado, o campo `correct` do JSON substitui esse match nesses três tipos. Em `unanswerable`, o acerto é 1 só se a resposta se abstém. O juiz não muda essa regra. |
+| fidelidade | Fração das afirmações da resposta sustentadas pelo contexto recuperado, segundo o juiz. O prompt de fidelidade não recebe o gabarito. Sem juiz, o campo fica nulo. Contexto vazio não sustenta fato; abstenção sem fato extra vale 1. |
+| alucinação | Entre as `unanswerable`, a fração que não se absteve. Não usa o juiz. Conta como abstenção: texto vazio, o gabarito `Não consta no corpus.`, ou uma recusa sem dígito e sem palavra que não esteja na pergunta nem numa lista fechada de termos de recusa. `Não há menção a ciclovia.` abstém se a pergunta já diz ciclovia. `Não sei. O PIB é 9 milhões.` não abstém. |
+| recall@k | Documentos de `source_doc_ids` que aparecem em algum chunk recuperado, dividido pelo tamanho do ouro. O id do chunk é `doc_id:indice`. k é a quantidade de chunks da resposta. Ouro vazio (`unanswerable`) deixa o recall nulo. `no_context` não recupera, então o recall dos outros tipos é 0. |
+| custo | Tokens da API. Se a resposta não trouxer uso, a estimativa é um token a cada quatro caracteres e o campo `tokens_estimated` fica verdadeiro. USD = tokens de entrada × preço de entrada + tokens de saída × preço de saída. A saída do Gemini inclui thinking tokens quando o total da API vem preenchido. A tabela é `data/eval/prices.v1.json`. Modelo ausente deixa `cost_usd` nulo. |
+| latência | Tempo de parede de `pipeline.answer`, em milissegundos, incluindo a recuperação. Linha com `cached: true` não entra na média. |
+
+A tabela de preço é a lista do tier pago Standard, só texto, consultada em outubro de 2026 na documentação do Gemini: `gemini-2.5-flash` a US$ 0.30 / US$ 2.50 por milhão de tokens de entrada e saída, e `gemini-2.5-flash-lite` a US$ 0.10 / US$ 0.40. Não é áudio nem batch. O tier gratuito cobra zero; o campo estima o volume como se fosse pago, para comparar pipelines. Outro modelo exige uma linha no JSON. Preço zero na tabela é escolha de quem edita o arquivo, não o padrão.
+
+O cache fica em `EVAL_CACHE_DIR` (padrão `results/cache`). A chave é o SHA-256 do modelo e do prompt. Acerto de cache não chama a rede, não espera o intervalo e não conta como latência de provedor. O diretório `results/` está no `.gitignore`: pode conter resposta de modelo e não entra no git.
+
+Entre chamadas de rede o runner espera `REQUEST_INTERVAL_S` (padrão 6, perto de 10 requisições por minuto). Em HTTP 429, `RESOURCE_EXHAUSTED`, 500, 503 ou cabeçalho `Retry-After`, tenta de novo com espera exponencial, até `LLM_MAX_RETRIES` (padrão 6). O mesmo ritmo vale para o juiz. O provedor do juiz é `JUDGE_PROVIDER` (`gemini` por padrão, ou `openai`, `fake`, `off`). `JUDGE_MODEL` vazio segue o modelo de geração desse provedor.
+
+O corpus indexado é o do gabarito (`data/sample`, ou `--corpus`), não um `CORPUS_PATH` diferente.
+
+Da raiz do repositório, com `GEMINI_API_KEY` só no ambiente ou no `.env`:
+
+```bash
+uv sync --extra gemini
+uv run python -m rag_study.run --pipeline no_context --out results/no_context.jsonl
+uv run python -m rag_study.run --pipeline naive_rag --out results/naive_rag.jsonl
+uv run python -m rag_study.run --pipeline rag_rerank --out results/rag_rerank.jsonl
+uv run python -m rag_study.aggregate results/no_context.jsonl results/naive_rag.jsonl results/rag_rerank.jsonl --md results/summary.md --csv results/summary.csv
+```
+
+A agregação imprime uma tabela e, com `--md` e `--csv`, grava os dois arquivos. Há uma linha por pipeline e tipo presente (`factual`, `numeric`, `multi_hop`, `unanswerable`) e uma linha `all`. Colunas: n, acerto, fidelidade, alucinação, recall@k, latência média sem cache, soma dos tokens de resposta e de juiz, soma de custo e quantidade de linhas servidas do cache. Célula vazia significa métrica indefinida naquele recorte. Custo nulo não vira zero: a soma só aparece se alguma linha tinha preço. Pergunta repetida na mesma pipeline aborta a agregação. Um JSONL interrompido por erro de provedor pode ficar pela metade; não serve como experimento completo.
+
+Fumaça offline, sem chave e sem medir qualidade:
+
+```bash
+LLM_PROVIDER=fake EMBEDDING_PROVIDER=fake uv run python -m rag_study.run \
+  --pipeline naive_rag --out results/smoke.jsonl --judge off --interval 0 --limit 2
+```
+
+`--limit` corta o gabarito na ordem do arquivo. Não é uma amostra do estudo. `fake` não está na tabela de preço, então `cost_usd` sai nulo.
 
 ## Como rodar
 
@@ -111,6 +151,8 @@ Validar o dataset, também offline:
 uv run python -m rag_study.dataset
 ```
 
+O comando do dataset só valida o arquivo. A execução com gabarito e métricas está na seção Avaliação.
+
 Testes e lint, os mesmos da CI:
 
 ```bash
@@ -128,13 +170,19 @@ loader → chunker → embedder → InMemoryVectorStore
 pergunta → Retriever → (Reranker) → LLM → Answer
 ```
 
-O gabarito não entra nesse caminho. Ele só existe para a avaliação futura.
+O gabarito não entra no prompt. O harness lê o JSONL, chama a pipeline e grava o JSONL de saída.
 
 | módulo | papel |
 | --- | --- |
 | `rag_study.llm` / `rag_study.embeddings` | Gemini, OpenAI ou fake. O SDK só é importado na primeira chamada. |
 | `rag_study.loader` | `.txt` e `.md` |
 | `rag_study.dataset` | schema do gabarito, carga do JSONL e validação offline |
+| `rag_study.metrics` | match normalizado, abstenção, alucinação e recall@k |
+| `rag_study.judge` | prompts de correção e fidelidade; a resposta do juiz é JSON |
+| `rag_study.usage` | tokens do provedor, estimativa e custo pela tabela |
+| `rag_study.cache` | cache em disco, intervalo e nova tentativa em 429 |
+| `rag_study.run` | CLI que grava uma linha por pergunta |
+| `rag_study.aggregate` | tabela markdown e CSV a partir dos JSONL |
 | `rag_study.chunker` | `fixed` e `recursive` |
 | `rag_study.vector_store` | cosseno em memória |
 | `rag_study.retriever` | embedding da pergunta + `top_k` |
@@ -145,9 +193,9 @@ O gabarito não entra nesse caminho. Ele só existe para a avaliação futura.
 ## Roadmap
 
 - **PR2 — dataset (feito).** Corpus sintético em `data/sample/` e gabarito em `data/eval/questions.v1.jsonl`. Validação offline de schema, citação e apoio literal. Sem resposta de modelo.
-- **PR3 — avaliação.** Harness das métricas (correção, fidelidade, alucinação, custo, latência), ainda sem tabela de experimento fechada.
+- **PR3 — avaliação (feito).** Harness das métricas (correção, fidelidade, alucinação, recall, custo, latência), com cache, retry e agregação. Sem execução real gravada e sem tabela preenchida.
 - **PR4 — experimentos.** Rodar as três condições, gráficos e relatório no README. Só então entram números.
 
 ## O que ainda não está feito
 
-Não há harness de métricas, não há resposta de modelo gravada no gabarito e não há tabela experimental. Qualquer número de qualidade citado antes do PR4 está fora deste estudo.
+Não há JSONL de execução no git, não há tabela preenchida e não há gráfico. O gabarito não guarda resposta de modelo. Qualquer número de qualidade citado antes do PR4 está fora deste estudo.

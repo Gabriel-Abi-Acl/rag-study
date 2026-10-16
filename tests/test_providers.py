@@ -19,8 +19,15 @@ def test_gemini_complete_and_embed_call_the_sdk_offline(monkeypatch):
             calls["contents"] = contents
             calls["temperature"] = config.temperature
 
+            class Usage:
+                prompt_token_count = 11
+                candidates_token_count = 5
+                thoughts_token_count = 0
+                total_token_count = 16
+
             class Response:
                 text = "ok-gemini"
+                usage_metadata = Usage()
 
             return Response()
 
@@ -58,6 +65,10 @@ def test_gemini_complete_and_embed_call_the_sdk_offline(monkeypatch):
 
     llm = GeminiLLM(api_key="gemini-test", model="gemini-2.5-flash")
     assert llm.complete("ping") == "ok-gemini"
+    assert llm.last_usage is not None
+    assert llm.last_usage.prompt_tokens == 11
+    assert llm.last_usage.completion_tokens == 5
+    assert llm.last_usage.estimated is False
     vectors = GeminiEmbedder(api_key="gemini-test", model="gemini-embedding-001").embed(
         ["um", "dois"]
     )
@@ -76,8 +87,14 @@ def test_openai_complete_and_embed_keep_input_order(monkeypatch):
     class Choice:
         message = Message()
 
+    class Usage:
+        prompt_tokens = 3
+        completion_tokens = 4
+        total_tokens = 7
+
     class ChatResponse:
         choices = [Choice()]
+        usage = Usage()
 
     class EmbeddingRow:
         def __init__(self, index: int, embedding: list[float]) -> None:
@@ -113,7 +130,12 @@ def test_openai_complete_and_embed_keep_input_order(monkeypatch):
     openai.OpenAI = Client
     monkeypatch.setitem(sys.modules, "openai", openai)
 
-    assert OpenAILLM(api_key="sk-test", model="gpt-4o-mini").complete("ping") == "ok-openai"
+    llm = OpenAILLM(api_key="sk-test", model="gpt-4o-mini")
+    assert llm.complete("ping") == "ok-openai"
+    assert llm.last_usage is not None
+    assert llm.last_usage.prompt_tokens == 3
+    assert llm.last_usage.completion_tokens == 4
+    assert llm.last_usage.estimated is False
     vectors = OpenAIEmbedder(api_key="sk-test", model="text-embedding-3-small").embed(["a", "b"])
     assert vectors == [[1.0, 0.0], [0.0, 1.0]]
 

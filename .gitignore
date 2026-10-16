@@ -8,3 +8,6 @@ __pycache__/
 dist/
 build/
 .env
+
+# Saídas de avaliação. Podem conter resposta de modelo. Não versionar.
+results/

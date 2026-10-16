@@ -1,10 +1,12 @@
 """LLMs de geração. O SDK só é importado dentro de complete(), nunca na importação.
 
 Temperatura 0 deixa a comparação entre pipelines menos sensível à amostragem.
-A medição de custo e latência fica fora deste módulo.
+`last_usage` guarda a contagem do provedor quando ela vem na resposta. Preço,
+latência, cache e nova tentativa ficam no harness, não aqui.
 """
 
 from rag_study.errors import ConfigError, ProviderError
+from rag_study.usage import TokenUsage, read_gemini_usage, read_openai_usage
 
 
 class FakeLLM:
@@ -13,9 +15,11 @@ class FakeLLM:
     def __init__(self, reply: str = "resposta-fake") -> None:
         self.reply = reply
         self.prompts: list[str] = []
+        self.last_usage: TokenUsage | None = None
 
     def complete(self, prompt: str) -> str:
         self.prompts.append(prompt)
+        self.last_usage = None
         return self.reply
 
 
@@ -26,8 +30,10 @@ class GeminiLLM:
         self._api_key = api_key
         self._model = model
         self._client = None
+        self.last_usage: TokenUsage | None = None
 
     def complete(self, prompt: str) -> str:
+        self.last_usage = None
         client = self._client_or_create()
         from google.genai import types
 
@@ -39,6 +45,7 @@ class GeminiLLM:
         text = getattr(response, "text", None)
         if not text:
             raise ProviderError("Gemini devolveu uma resposta vazia.")
+        self.last_usage = read_gemini_usage(response)
         return text
 
     def _client_or_create(self):
@@ -60,8 +67,10 @@ class OpenAILLM:
         self._api_key = api_key
         self._model = model
         self._client = None
+        self.last_usage: TokenUsage | None = None
 
     def complete(self, prompt: str) -> str:
+        self.last_usage = None
         client = self._client_or_create()
         response = client.chat.completions.create(
             model=self._model,
@@ -71,6 +80,7 @@ class OpenAILLM:
         text = response.choices[0].message.content
         if not text:
             raise ProviderError("OpenAI devolveu uma resposta vazia.")
+        self.last_usage = read_openai_usage(response)
         return text
 
     def _client_or_create(self):

@@ -43,11 +43,51 @@ def build_embedder(settings: Settings) -> Embedder:
     raise ConfigError(f"EMBEDDING_PROVIDER inválida: {settings.embedding_provider}.")
 
 
+def generation_model_name(settings: Settings) -> str:
+    """Nome cobrado na tabela de preço. fake não é um modelo de provedor."""
+    if settings.llm_provider == "openai":
+        return settings.openai_model
+    if settings.llm_provider == "gemini":
+        return settings.gemini_model
+    return "fake"
+
+
+def judge_model_name(settings: Settings) -> str:
+    """Modelo do juiz. Vazio segue o modelo de geração do provedor escolhido."""
+    if settings.judge_model:
+        return settings.judge_model
+    if settings.judge_provider == "openai":
+        return settings.openai_model
+    if settings.judge_provider == "gemini":
+        return settings.gemini_model
+    return "fake"
+
+
+def build_judge(settings: Settings) -> LLM | None:
+    """Juiz opcional. off não abre cliente. A chave continua só no ambiente."""
+    provider = settings.judge_provider
+    if provider == "off":
+        return None
+    model = judge_model_name(settings)
+    if provider == "fake":
+        return FakeLLM()
+    if provider == "gemini":
+        return GeminiLLM(api_key=settings.gemini_api_key, model=model)
+    if provider == "openai":
+        return OpenAILLM(api_key=settings.openai_api_key, model=model)
+    raise ConfigError(f"JUDGE_PROVIDER inválida: {provider}.")
+
+
 def build_pipelines(
     settings: Settings,
+    llm: LLM | None = None,
 ) -> dict[str, NoContextPipeline | NaiveRagPipeline | RagRerankPipeline]:
-    """Indexa o corpus e devolve no_context, naive_rag e rag_rerank."""
-    llm = build_llm(settings)
+    """Indexa o corpus e devolve no_context, naive_rag e rag_rerank.
+
+    `llm` pronto deixa cache e retry do harness fora desta fábrica.
+    """
+    if llm is None:
+        llm = build_llm(settings)
     embedder = build_embedder(settings)
     store = InMemoryVectorStore()
     documents = load_corpus(settings.corpus_path)
